@@ -1,5 +1,7 @@
 -- Standard awesome library
 require("volume")
+require("battery")
+local battery = require("battery")
 local gears = require("gears")
 local awful = require("awful")
 awful.rules = require("awful.rules")
@@ -170,6 +172,8 @@ mytasklist.buttons = awful.util.table.join(
 for s = 1, screen.count() do
     -- Create a promptbox for each screen
     mypromptbox[s] = awful.widget.prompt()
+    -- Create battery widget
+    batterywidget = wibox.widget.textbox()
     -- Create an imagebox widget which will contains an icon indicating which layout we're using.
     -- We need one layoutbox per screen.
     mylayoutbox[s] = awful.widget.layoutbox(s)
@@ -195,10 +199,12 @@ for s = 1, screen.count() do
 
     -- Widgets that are aligned to the right
     local right_layout = wibox.layout.fixed.horizontal()
+    right_layout:add(batterywidget)
     if s == 1 then right_layout:add(wibox.widget.systray()) end
     right_layout:add(volume_widget)
     right_layout:add(mytextclock)
     right_layout:add(mylayoutbox[s])
+
 
     -- Now bring it all together (with the tasklist in the middle)
     local layout = wibox.layout.align.horizontal()
@@ -455,3 +461,15 @@ end)
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}
+
+-- Autostart section
+-- Blank autostart:
+-- awful.util.spawn_with_shell("")
+awful.util.spawn_with_shell("nm-applet") -- networkManager applet
+awful.util.spawn_with_shell("xfce4-power-manager") -- Battery monitor, etc.
+
+  batterywidget_timer = timer({timeout = 1})
+  batterywidget_timer:connect_signal("timeout", function()
+    batterywidget:set_text(batteryInfo("BAT0"))
+  end)
+  batterywidget_timer:start()
